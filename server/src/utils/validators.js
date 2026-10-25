@@ -18,3 +18,14 @@ export function validateRegister({ username, email, password } = {}) {
   }
   return errors;
 }
+
+export function validateLogin({ email, password } = {}) {
+  const errors = [];
+  if (typeof email !== 'string' || !EMAIL_RE.test(email.trim())) {
+    errors.push('A valid email is required');
+  }
+  if (typeof password !== 'string' || password.length === 0) {
+    errors.push('Password is required');
+  }
+  return errors;
+}
