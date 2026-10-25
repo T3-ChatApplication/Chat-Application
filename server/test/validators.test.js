@@ -1,6 +1,6 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateRegister, validateLogin } from '../src/utils/validators.js';
+import { validateRegister, validateLogin, validateMessage } from '../src/utils/validators.js';
 
 test('register: accepts valid input', () => {
   const errors = validateRegister({ username: 'neel_k', email: 'a@b.com', password: 'password123' });
@@ -24,4 +24,12 @@ test('register: handles missing body', () => {
 test('login: requires email and password', () => {
   assert.equal(validateLogin({ email: 'a@b.com', password: 'x' }).length, 0);
   assert.equal(validateLogin({ email: '', password: '' }).length, 2);
+});
+
+test('message: validates receiver id and text', () => {
+  const id = 'a'.repeat(24);
+  assert.equal(validateMessage({ to: id, text: 'hello' }).length, 0);
+  assert.ok(validateMessage({ to: 'bad', text: 'hello' }).length > 0);
+  assert.ok(validateMessage({ to: id, text: '   ' }).length > 0);
+  assert.ok(validateMessage({ to: id, text: 'x'.repeat(2001) }).length > 0);
 });
