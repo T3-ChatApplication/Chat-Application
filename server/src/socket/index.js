@@ -1,6 +1,7 @@
-import { randomUUID } from 'crypto';
+
 import { Server } from 'socket.io';
 import User from '../models/User.js';
+import Message from '../models/Message.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
 
@@ -14,7 +15,7 @@ export function initSocket(httpServer) {
     cors: { origin: allowedOrigins },
   });
 
-  // Only authenticated users may open a socket (token sent in the handshake)
+  // Only authenticated users may open a socket.
   io.use((socket, next) => {
     try {
       socket.userId = verifyToken(socket.handshake.auth?.token);
@@ -25,34 +26,52 @@ export function initSocket(httpServer) {
   });
 
   io.on('connection', (socket) => {
-    // Each user has a personal room, so a message reaches every open tab/device
     socket.join(`user:${socket.userId}`);
 
-    // Client emits: socket.emit('message:send', { to, text }, ack)
     socket.on('message:send', async (payload, ack) => {
       const reply = typeof ack === 'function' ? ack : () => {};
+
       try {
         const errors = validateMessage(payload);
-        if (errors.length) return reply({ ok: false, error: errors[0] });
+        if (errors.length) {
+          return reply({ ok: false, error: errors[0] });
+        }
 
         const { to } = payload;
         const text = payload.text.trim();
 
         const receiverExists = await User.exists({ _id: to });
-        if (!receiverExists) return reply({ ok: false, error: 'Receiver not found' });
+        if (!receiverExists) {
+          return reply({ ok: false, error: 'Receiver not found' });
+        }
 
-        // Step 6 delivers messages live but does not store them yet.
-        // Saving to MongoDB is added in the persistence step.
-        const message = {
-          id: randomUUID(),
+        // Both participants generate the same conversation ID.
+        const conversationId = [String(socket.userId), String(to)]
+          .sort()
+          .join(':');
+
+        // Save the message before broadcasting it.
+        const savedMessage = await Message.create({
+          conversationId,
           sender: socket.userId,
           receiver: to,
           text,
-          createdAt: new Date().toISOString(),
+        });
+
+        const message = {
+          id: savedMessage._id.toString(),
+          conversationId: savedMessage.conversationId,
+          sender: String(savedMessage.sender),
+          receiver: String(savedMessage.receiver),
+          text: savedMessage.text,
+          createdAt: savedMessage.createdAt.toISOString(),
         };
 
-        // Deliver to both participants (sender gets it too, so all their tabs stay in sync)
-        io.to(`user:${to}`).to(`user:${socket.userId}`).emit('message:new', message);
+        // Send to both participants, including all their open tabs.
+        io.to(`user:${to}`)
+          .to(`user:${socket.userId}`)
+          .emit('message:new', message);
+
         return reply({ ok: true, message });
       } catch (err) {
         console.error('message:send failed', err);
