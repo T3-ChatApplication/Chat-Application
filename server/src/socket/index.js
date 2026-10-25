@@ -1,7 +1,7 @@
 
 import { Server } from 'socket.io';
 import User from '../models/User.js';
-import Message from '../models/Message.js';
+import Message, { buildConversationId } from '../models/Message.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
 
@@ -26,8 +26,10 @@ export function initSocket(httpServer) {
   });
 
   io.on('connection', (socket) => {
+    // Each user has a personal room for all their open tabs/devices.
     socket.join(`user:${socket.userId}`);
 
+    // Client emits: socket.emit('message:send', { to, text }, ack)
     socket.on('message:send', async (payload, ack) => {
       const reply = typeof ack === 'function' ? ack : () => {};
 
@@ -45,29 +47,20 @@ export function initSocket(httpServer) {
           return reply({ ok: false, error: 'Receiver not found' });
         }
 
-        // Both participants generate the same conversation ID.
-        const conversationId = [String(socket.userId), String(to)]
-          .sort()
-          .join(':');
+        // Generate the same conversation ID for both participants.
+        const conversationId = buildConversationId(socket.userId, to);
 
-        // Save the message before broadcasting it.
-        const savedMessage = await Message.create({
+        // Persist the message before broadcasting it.
+        const saved = await Message.create({
           conversationId,
           sender: socket.userId,
           receiver: to,
           text,
         });
 
-        const message = {
-          id: savedMessage._id.toString(),
-          conversationId: savedMessage.conversationId,
-          sender: String(savedMessage.sender),
-          receiver: String(savedMessage.receiver),
-          text: savedMessage.text,
-          createdAt: savedMessage.createdAt.toISOString(),
-        };
+        const message = saved.toPublic();
 
-        // Send to both participants, including all their open tabs.
+        // Deliver to both participants, including their other open tabs.
         io.to(`user:${to}`)
           .to(`user:${socket.userId}`)
           .emit('message:new', message);
@@ -75,7 +68,10 @@ export function initSocket(httpServer) {
         return reply({ ok: true, message });
       } catch (err) {
         console.error('message:send failed', err);
-        return reply({ ok: false, error: 'Could not send message' });
+        return reply({
+          ok: false,
+          error: 'Could not send message',
+        });
       }
     });
   });

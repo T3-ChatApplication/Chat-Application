@@ -28,6 +28,21 @@ const messageSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
-messageSchema.index({ conversationId: 1, createdAt: -1 });
+messageSchema.index({ conversationId: 1, createdAt: 1 });
+
+export function buildConversationId(userA, userB) {
+  return [String(userA), String(userB)].sort().join('_');
+}
+
+messageSchema.methods.toPublic = function () {
+  return {
+    id: this._id.toString(),
+    conversationId: this.conversationId,
+    sender: this.sender.toString(),
+    receiver: this.receiver.toString(),
+    text: this.text,
+    createdAt: this.createdAt.toISOString(),
+  };
+};
 
 export default mongoose.model('Message', messageSchema);
