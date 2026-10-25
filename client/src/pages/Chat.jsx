@@ -3,13 +3,16 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
 import { connectSocket } from '../socket.js';
 import ConversationList from '../components/ConversationList.jsx';
+import MessageList from '../components/MessageList.jsx';
+import MessageInput from '../components/MessageInput.jsx';
 
-// Step 5: pick another user to open a one-to-one conversation.
-// Sending and receiving messages is added in the next step.
+// Step 6: send and receive messages live.
+// Messages are not stored yet, so they disappear on refresh until the next steps.
 export default function Chat() {
   const { user, logout } = useAuth();
   const [users, setUsers] = useState([]);
   const [active, setActive] = useState(null);
+  const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
   const [error, setError] = useState('');
 
@@ -37,10 +40,31 @@ export default function Chat() {
     };
   }, []);
 
+  // Append new messages that belong to the open conversation
+  useEffect(() => {
+    const socket = connectSocket();
+    const onNew = (msg) => {
+      if (!active) return;
+      const belongs = msg.sender === active.id || msg.receiver === active.id;
+      if (!belongs) return;
+      setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
+    };
+    socket.on('message:new', onNew);
+    return () => socket.off('message:new', onNew);
+  }, [active]);
+
   const openConversation = useCallback((other) => {
     setActive(other);
+    setMessages([]);
     setError('');
   }, []);
+
+  function sendMessage(text) {
+    setError('');
+    connectSocket().emit('message:send', { to: active.id, text }, (res) => {
+      if (!res?.ok) setError(res?.error || 'Could not send message');
+    });
+  }
 
   return (
     <div className="chat-layout">
@@ -64,7 +88,8 @@ export default function Chat() {
           <>
             <header className="chat-header">{active.username}</header>
             {error && <div className="error">{error}</div>}
-            <div className="messages empty muted">Messages will appear here in the next step.</div>
+            <MessageList messages={messages} currentUserId={user.id} />
+            <MessageInput onSend={sendMessage} disabled={!connected} />
           </>
         ) : (
           <div className="center-screen muted">Select a user to start chatting</div>
