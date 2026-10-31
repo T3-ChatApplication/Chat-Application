@@ -282,3 +282,93 @@ a {
     height: auto;
   }
 }
+
+/* ---- Rooms (Sprint 2) ---- */
+.chat-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+
+.section-title {
+  margin: 12px 16px 6px;
+  font-size: 13px;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--muted);
+}
+
+.section-subtitle {
+  margin: 12px 16px 4px;
+  font-size: 12px;
+  color: var(--muted);
+  font-weight: 600;
+}
+
+.room-form {
+  display: flex;
+  gap: 6px;
+  padding: 0 16px 8px;
+}
+
+.room-form input {
+  flex: 1;
+  min-width: 0;
+  padding: 8px 10px;
+  font-size: 14px;
+}
+
+.room-form button,
+button.small {
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.room-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 20px;
+  font-size: 14px;
+}
+
+.avatar.room {
+  background: #0f766e;
+}
+
+.pad-sm {
+  padding: 4px 16px;
+  font-size: 13px;
+  margin: 0;
+}
+
+.error.small {
+  margin: 0 16px 8px;
+  padding: 6px 10px;
+  font-size: 13px;
+}
+
+.room-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-weight: 400;
+  font-size: 13px;
+  min-width: 0;
+}
+
+.room-members {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  align-items: center;
+  min-width: 0;
+}
+
+.member {
+  background: var(--bg);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  padding: 2px 8px;
+}

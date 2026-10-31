@@ -1,6 +1,12 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
-import { validateRegister, validateLogin, validateMessage } from '../src/utils/validators.js';
+import {
+  validateRegister,
+  validateLogin,
+  validateMessage,
+  validateRoom,
+  isObjectId,
+} from '../src/utils/validators.js';
 
 test('register: accepts valid input', () => {
   const errors = validateRegister({ username: 'neel_k', email: 'a@b.com', password: 'password123' });
@@ -24,6 +30,26 @@ test('register: handles missing body', () => {
 test('login: requires email and password', () => {
   assert.equal(validateLogin({ email: 'a@b.com', password: 'x' }).length, 0);
   assert.equal(validateLogin({ email: '', password: '' }).length, 2);
+});
+
+test('room: accepts normal names and rejects bad ones', () => {
+  assert.deepEqual(validateRoom({ name: 'General' }), []);
+  assert.deepEqual(validateRoom({ name: 'Project team-1' }), []);
+  assert.ok(validateRoom({ name: 'a' }).length > 0);
+  assert.ok(validateRoom({ name: 'x'.repeat(41) }).length > 0);
+  assert.ok(validateRoom({ name: '<script>' }).length > 0);
+  assert.ok(validateRoom({ name: 42 }).length > 0);
+  assert.ok(validateRoom(null).length > 0);
+  assert.ok(validateRoom().length > 0);
+});
+
+test('isObjectId: only accepts 24-character hex strings', () => {
+  assert.equal(isObjectId('a'.repeat(24)), true);
+  assert.equal(isObjectId('A1b2c3d4e5f6a1b2c3d4e5f6'), true);
+  assert.equal(isObjectId('a'.repeat(23)), false);
+  assert.equal(isObjectId('g'.repeat(24)), false);
+  assert.equal(isObjectId({ $ne: null }), false);
+  assert.equal(isObjectId(undefined), false);
 });
 
 test('message: validates receiver id and text', () => {
