@@ -34,6 +34,7 @@ export const api = {
   me: () => request('/auth/me'),
   users: () => request('/users'),
   history: (userId) => request(`/messages/${userId}`),
+  roomHistory: (roomId) => request(`/messages/room/${roomId}`),
   rooms: () => request('/rooms'),
   room: (roomId) => request(`/rooms/${roomId}`),
   createRoom: (name) => request('/rooms', { method: 'POST', body: { name } }),

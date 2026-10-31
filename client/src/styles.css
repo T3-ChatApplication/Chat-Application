@@ -372,3 +372,11 @@ button.small {
   border-radius: 999px;
   padding: 2px 8px;
 }
+
+/* ---- Group messages (Sprint 2) ---- */
+.bubble .sender {
+  font-size: 12px;
+  font-weight: 600;
+  opacity: 0.8;
+  margin-bottom: 2px;
+}

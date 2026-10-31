@@ -1,32 +1,51 @@
 import mongoose from 'mongoose';
-import Message, { buildConversationId } from '../models/Message.js';
+import Message, { buildConversationId, buildRoomConversationId } from '../models/Message.js';
+import Room from '../models/Room.js';
+import { isObjectId } from '../utils/validators.js';
 
-export async function getConversationHistory(req, res, next) {
+// Newest N messages of a conversation (optionally older than ?before=), oldest first
+async function loadHistory(conversationId, req) {
+  const limit = Math.min(Math.max(parseInt(req.query.limit, 10) || 50, 1), 200);
+  const query = { conversationId };
+  if (req.query.before) {
+    const before = new Date(req.query.before);
+    if (!Number.isNaN(before.getTime())) query.createdAt = { $lt: before };
+  }
+
+  // Newest N, then reversed so the client receives them in reading order
+  const docs = await Message.find(query).sort({ createdAt: -1 }).limit(limit);
+  return docs.reverse().map((m) => m.toPublic());
+}
+
+// GET /api/messages/:userId?limit=50&before=<ISO date>
+// Returns the one-to-one history between the logged-in user and :userId, oldest first.
+export async function getHistory(req, res, next) {
   try {
-    const otherUserId = req.params.userId;
-
-    // Check that the requested user's ID is valid.
-    if (!mongoose.isValidObjectId(otherUserId)) {
-      return res.status(400).json({
-        message: 'Invalid user ID',
-      });
+    const { userId: otherId } = req.params;
+    if (!mongoose.isValidObjectId(otherId)) {
+      return res.status(400).json({ message: 'Invalid user id' });
     }
 
-    // Both participants get the same conversation ID.
-    const conversationId = buildConversationId(
-      req.userId,
-      otherUserId
-    );
+    const messages = await loadHistory(buildConversationId(req.userId, otherId), req);
+    return res.json({ messages });
+  } catch (err) {
+    return next(err);
+  }
+}
 
-    // Retrieve saved messages in chronological order.
-    const messages = await Message.find({ conversationId })
-      .sort({ createdAt: 1, _id: 1 })
-      .limit(200);
+// GET /api/messages/room/:roomId?limit=50&before=<ISO date>
+// Group history, readable by room members only.
+export async function getRoomHistory(req, res, next) {
+  try {
+    const { roomId } = req.params;
+    if (!isObjectId(roomId)) return res.status(400).json({ message: 'Invalid room id' });
 
-    return res.status(200).json({
-      messages: messages.map((message) => message.toPublic()),
-    });
-  } catch (error) {
-    return next(error);
+    const isMember = await Room.exists({ _id: roomId, members: req.userId });
+    if (!isMember) return res.status(403).json({ message: 'Join the room to read its messages' });
+
+    const messages = await loadHistory(buildRoomConversationId(roomId), req);
+    return res.json({ messages });
+  } catch (err) {
+    return next(err);
   }
 }
