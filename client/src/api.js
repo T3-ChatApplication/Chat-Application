@@ -34,4 +34,9 @@ export const api = {
   me: () => request('/auth/me'),
   users: () => request('/users'),
   history: (userId) => request(`/messages/${userId}`),
+  rooms: () => request('/rooms'),
+  room: (roomId) => request(`/rooms/${roomId}`),
+  createRoom: (name) => request('/rooms', { method: 'POST', body: { name } }),
+  joinRoom: (roomId) => request(`/rooms/${roomId}/join`, { method: 'POST' }),
+  leaveRoom: (roomId) => request(`/rooms/${roomId}/leave`, { method: 'POST' }),
 };

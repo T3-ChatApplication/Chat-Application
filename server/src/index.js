@@ -11,7 +11,8 @@ async function start() {
 
   const app = createApp();
   const server = http.createServer(app);
-  initSocket(server);
+  // Controllers reach Socket.IO through the app (req.app.get('io'))
+  app.set('io', initSocket(server));
 
   server.listen(PORT, () => console.log(`ChatSphere server running on port ${PORT}`));
 }

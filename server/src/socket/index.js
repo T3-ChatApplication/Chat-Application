@@ -1,6 +1,6 @@
-
 import { Server } from 'socket.io';
 import User from '../models/User.js';
+import Room from '../models/Room.js';
 import Message, { buildConversationId } from '../models/Message.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
@@ -15,7 +15,7 @@ export function initSocket(httpServer) {
     cors: { origin: allowedOrigins },
   });
 
-  // Only authenticated users may open a socket.
+  // Only authenticated users may open a socket (token sent in the handshake)
   io.use((socket, next) => {
     try {
       socket.userId = verifyToken(socket.handshake.auth?.token);
@@ -25,55 +25,49 @@ export function initSocket(httpServer) {
     }
   });
 
-  io.on('connection', (socket) => {
-    // Each user has a personal room for all their open tabs/devices.
+  io.on('connection', async (socket) => {
+    // Each user has a personal room, so a message reaches every open tab/device
     socket.join(`user:${socket.userId}`);
 
     // Client emits: socket.emit('message:send', { to, text }, ack)
     socket.on('message:send', async (payload, ack) => {
       const reply = typeof ack === 'function' ? ack : () => {};
-
       try {
         const errors = validateMessage(payload);
-        if (errors.length) {
-          return reply({ ok: false, error: errors[0] });
-        }
+        if (errors.length) return reply({ ok: false, error: errors[0] });
 
         const { to } = payload;
         const text = payload.text.trim();
 
         const receiverExists = await User.exists({ _id: to });
-        if (!receiverExists) {
-          return reply({ ok: false, error: 'Receiver not found' });
-        }
+        if (!receiverExists) return reply({ ok: false, error: 'Receiver not found' });
 
-        // Generate the same conversation ID for both participants.
-        const conversationId = buildConversationId(socket.userId, to);
-
-        // Persist the message before broadcasting it.
+        // Save first, then deliver, so what users see is always what is stored
         const saved = await Message.create({
-          conversationId,
+          conversationId: buildConversationId(socket.userId, to),
           sender: socket.userId,
           receiver: to,
           text,
         });
 
         const message = saved.toPublic();
-
-        // Deliver to both participants, including their other open tabs.
-        io.to(`user:${to}`)
-          .to(`user:${socket.userId}`)
-          .emit('message:new', message);
-
+        // Deliver to both participants (sender gets it too, so all their tabs stay in sync)
+        io.to(`user:${to}`).to(`user:${socket.userId}`).emit('message:new', message);
         return reply({ ok: true, message });
       } catch (err) {
         console.error('message:send failed', err);
-        return reply({
-          ok: false,
-          error: 'Could not send message',
-        });
+        return reply({ ok: false, error: 'Could not send message' });
       }
     });
+
+    // Join the socket room of every chat room the user belongs to.
+    // Done after the handlers above are registered, so no event is missed while this loads.
+    try {
+      const rooms = await Room.find({ members: socket.userId }).select('_id').lean();
+      socket.join(rooms.map((r) => `room:${r._id}`));
+    } catch (err) {
+      console.error('Could not join rooms', err);
+    }
   });
 
   return io;

@@ -2,6 +2,13 @@
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 const USERNAME_RE = /^[A-Za-z0-9_]+$/;
+const OBJECT_ID_RE = /^[a-f0-9]{24}$/i;
+const ROOM_NAME_RE = /^[A-Za-z0-9][A-Za-z0-9 _-]*$/;
+
+// True for a 24-character hex string (a MongoDB ObjectId)
+export function isObjectId(value) {
+  return typeof value === 'string' && OBJECT_ID_RE.test(value);
+}
 
 export function validateRegister({ username, email, password } = {}) {
   const errors = [];
@@ -26,6 +33,18 @@ export function validateLogin({ email, password } = {}) {
   }
   if (typeof password !== 'string' || password.length === 0) {
     errors.push('Password is required');
+  }
+  return errors;
+}
+
+export function validateRoom(payload) {
+  const { name } = payload && typeof payload === 'object' ? payload : {};
+  const trimmed = typeof name === 'string' ? name.trim() : '';
+  const errors = [];
+  if (trimmed.length < 2 || trimmed.length > 40) {
+    errors.push('Room name must be 2-40 characters');
+  } else if (!ROOM_NAME_RE.test(trimmed)) {
+    errors.push('Room name may only contain letters, numbers, spaces, hyphens and underscores');
   }
   return errors;
 }
