@@ -11,20 +11,27 @@ export default function Chat() {
   const { user, logout } = useAuth();
 
   const [users, setUsers] = useState([]);
+  const [rooms, setRooms] = useState([]);
+
   const [active, setActive] = useState(null);
+  const [activeRoom, setActiveRoom] = useState(null);
+
   const [messages, setMessages] = useState([]);
   const [connected, setConnected] = useState(false);
+
   const [error, setError] = useState('');
   const [loadingHistory, setLoadingHistory] = useState(false);
+  const [roomName, setRoomName] = useState('');
+  const [roomLoading, setRoomLoading] = useState(false);
 
-  // Load the list of users.
+  // Load users for direct messaging.
   useEffect(() => {
     let cancelled = false;
 
     api.users()
       .then((data) => {
         if (!cancelled) {
-          setUsers(data.users);
+          setUsers(data.users || []);
         }
       })
       .catch((err) => {
@@ -38,17 +45,26 @@ export default function Chat() {
     };
   }, []);
 
-  // Track the Socket.IO connection status.
+  // Load all available group rooms.
+  const loadRooms = useCallback(async () => {
+    try {
+      const data = await api.rooms();
+      setRooms(data.rooms || []);
+    } catch (err) {
+      setError(err.message || 'Could not load rooms');
+    }
+  }, []);
+
+  useEffect(() => {
+    loadRooms();
+  }, [loadRooms]);
+
+  // Track Socket.IO connection status.
   useEffect(() => {
     const socket = connectSocket();
 
-    const onConnect = () => {
-      setConnected(true);
-    };
-
-    const onDisconnect = () => {
-      setConnected(false);
-    };
+    const onConnect = () => setConnected(true);
+    const onDisconnect = () => setConnected(false);
 
     const onError = (err) => {
       setConnected(false);
@@ -70,7 +86,7 @@ export default function Chat() {
     };
   }, []);
 
-  // Load saved messages whenever a conversation is opened.
+  // Load private conversation history.
   useEffect(() => {
     if (!active) {
       setMessages([]);
@@ -86,7 +102,6 @@ export default function Chat() {
       setLoadingHistory(true);
 
       try {
-        // api.history includes the saved authentication token.
         const data = await api.history(active.id);
 
         if (!cancelled) {
@@ -110,7 +125,7 @@ export default function Chat() {
     };
   }, [active]);
 
-  // Receive new messages for the currently open conversation.
+  // Receive messages for the currently open private conversation.
   useEffect(() => {
     const socket = connectSocket();
 
@@ -143,14 +158,85 @@ export default function Chat() {
     };
   }, [active, user.id]);
 
-  // Open a conversation with the selected user.
+  // Open a private conversation.
   const openConversation = useCallback((other) => {
     setActive(other);
+    setActiveRoom(null);
     setMessages([]);
     setError('');
   }, []);
 
-  // Send a message through Socket.IO.
+  // Create a new group room.
+  async function createGroupRoom(event) {
+    event.preventDefault();
+
+    const trimmedName = roomName.trim();
+
+    if (!trimmedName) {
+      setError('Please enter a room name');
+      return;
+    }
+
+    setRoomLoading(true);
+    setError('');
+
+    try {
+      const data = await api.createRoom(trimmedName);
+
+      setRoomName('');
+      setActive(null);
+      setActiveRoom(data.room);
+      setMessages([]);
+
+      await loadRooms();
+    } catch (err) {
+      setError(err.message || 'Could not create room');
+    } finally {
+      setRoomLoading(false);
+    }
+  }
+
+  // Join an existing room.
+  async function joinGroupRoom(roomId) {
+    setRoomLoading(true);
+    setError('');
+
+    try {
+      const data = await api.joinRoom(roomId);
+
+      setActive(null);
+      setActiveRoom(data.room);
+      setMessages([]);
+
+      await loadRooms();
+    } catch (err) {
+      setError(err.message || 'Could not join room');
+    } finally {
+      setRoomLoading(false);
+    }
+  }
+
+  // Leave a room.
+  async function leaveGroupRoom(roomId) {
+    setRoomLoading(true);
+    setError('');
+
+    try {
+      await api.leaveRoom(roomId);
+
+      if (activeRoom?.id === roomId) {
+        setActiveRoom(null);
+      }
+
+      await loadRooms();
+    } catch (err) {
+      setError(err.message || 'Could not leave room');
+    } finally {
+      setRoomLoading(false);
+    }
+  }
+
+  // Send a private message.
   function sendMessage(text) {
     if (!active) {
       setError('Select a conversation first');
@@ -192,21 +278,84 @@ export default function Chat() {
           </button>
         </div>
 
-        <ConversationList
-          users={users}
-          activeId={active?.id}
-          onSelect={openConversation}
-        />
+        {/* Direct messages */}
+        <section className="direct-messages-section">
+          <h3>Direct Messages</h3>
+
+          <ConversationList
+            users={users}
+            activeId={active?.id}
+            onSelect={openConversation}
+          />
+        </section>
+
+        {/* Group rooms */}
+        <section className="rooms-section">
+          <h3>Group Rooms</h3>
+
+          <form onSubmit={createGroupRoom} className="room-create-form">
+            <input
+              type="text"
+              placeholder="Enter room name"
+              value={roomName}
+              onChange={(event) => setRoomName(event.target.value)}
+              maxLength={40}
+              disabled={roomLoading}
+            />
+
+            <button type="submit" disabled={roomLoading || !roomName.trim()}>
+              {roomLoading ? 'Please wait...' : 'Create Room'}
+            </button>
+          </form>
+
+          <div className="room-list">
+            {rooms.length === 0 ? (
+              <p className="muted">No rooms available yet.</p>
+            ) : (
+              rooms.map((room) => (
+                <div className="room-item" key={room.id}>
+                  <div className="room-info">
+                    <strong>{room.name}</strong>
+                    <small>
+                      {room.members.length} member
+                      {room.members.length !== 1 ? 's' : ''}
+                    </small>
+                  </div>
+
+                  {room.isMember ? (
+                    <button
+                      type="button"
+                      className="link"
+                      disabled={roomLoading}
+                      onClick={() => leaveGroupRoom(room.id)}
+                    >
+                      Leave
+                    </button>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => joinGroupRoom(room.id)}
+                      disabled={roomLoading}
+                    >
+                      Join
+                    </button>
+                  )}
+                </div>
+              ))
+            )}
+          </div>
+        </section>
       </aside>
 
+      {/* Main chat area */}
       <main className="chat-main">
+        {error && <div className="error">{error}</div>}
+
         {active ? (
           <>
             <header className="chat-header">
               {active.username}
             </header>
-
-            {error && <div className="error">{error}</div>}
 
             {loadingHistory && (
               <div className="center-screen muted">
@@ -230,9 +379,31 @@ export default function Chat() {
               disabled={!connected}
             />
           </>
+        ) : activeRoom ? (
+          <>
+            <header className="chat-header">
+              Group Room: {activeRoom.name}
+            </header>
+
+            <div className="center-screen muted">
+              <h2>{activeRoom.name}</h2>
+
+              <p>
+                You have joined this room successfully.
+              </p>
+
+              <p>
+                Members: {activeRoom.members.length}
+              </p>
+
+              <p>
+                Group messaging will be connected in the next stage.
+              </p>
+            </div>
+          </>
         ) : (
           <div className="center-screen muted">
-            Select a user to start chatting
+            Select a user to start chatting or create/join a group room.
           </div>
         )}
       </main>

@@ -5,6 +5,7 @@ import helmet from 'helmet';
 import authRoutes from './routes/auth.js';
 import userRoutes from './routes/users.js';
 import messageRoutes from './routes/messages.js';
+import roomRoutes from './routes/rooms.js';
 
 import { notFound, errorHandler } from './middleware/errorHandler.js';
 
@@ -27,6 +28,7 @@ export function createApp() {
   app.use('/api/auth', authRoutes);
   app.use('/api/users', userRoutes);
   app.use('/api/messages', messageRoutes);
+  app.use('/api/rooms', roomRoutes);
 
   app.use(notFound);
   app.use(errorHandler);
