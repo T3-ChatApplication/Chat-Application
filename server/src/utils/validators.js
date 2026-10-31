@@ -49,10 +49,18 @@ export function validateRoom(payload) {
   return errors;
 }
 
-export function validateMessage({ to, text } = {}) {
+// A message goes either to one user (`to`) or to a room (`room`), never both
+export function validateMessage(payload) {
+  const { to, room, text } = payload && typeof payload === 'object' ? payload : {};
   const errors = [];
-  if (typeof to !== 'string' || !/^[a-f0-9]{24}$/i.test(to)) {
+  const hasTo = to !== undefined && to !== null;
+  const hasRoom = room !== undefined && room !== null;
+  if (hasTo === hasRoom) {
+    errors.push('Send the message to either a user or a room');
+  } else if (hasTo && !isObjectId(to)) {
     errors.push('Receiver id is invalid');
+  } else if (hasRoom && !isObjectId(room)) {
+    errors.push('Room id is invalid');
   }
   if (typeof text !== 'string' || text.trim().length === 0) {
     errors.push('Message cannot be empty');

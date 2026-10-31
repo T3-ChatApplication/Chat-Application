@@ -52,6 +52,16 @@ test('isObjectId: only accepts 24-character hex strings', () => {
   assert.equal(isObjectId(undefined), false);
 });
 
+test('message: goes to a user or a room, not both and not neither', () => {
+  const id = 'a'.repeat(24);
+  assert.equal(validateMessage({ room: id, text: 'hello everyone' }).length, 0);
+  assert.ok(validateMessage({ room: 'bad', text: 'hi' }).length > 0);
+  assert.ok(validateMessage({ to: id, room: id, text: 'hi' }).length > 0);
+  assert.ok(validateMessage({ text: 'hi' }).length > 0);
+  assert.ok(validateMessage(null).length > 0);
+  assert.ok(validateMessage('text').length > 0);
+});
+
 test('message: validates receiver id and text', () => {
   const id = 'a'.repeat(24);
   assert.equal(validateMessage({ to: id, text: 'hello' }).length, 0);

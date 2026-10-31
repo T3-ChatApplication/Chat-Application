@@ -4,7 +4,8 @@ function formatTime(iso) {
   return new Date(iso).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
 }
 
-export default function MessageList({ messages, currentUserId }) {
+// names: { [userId]: username }. In a room (showSender) each incoming message shows who wrote it.
+export default function MessageList({ messages, currentUserId, names = {}, showSender = false }) {
   const endRef = useRef(null);
 
   // Keep the newest message in view
@@ -18,12 +19,16 @@ export default function MessageList({ messages, currentUserId }) {
 
   return (
     <div className="messages">
-      {messages.map((m) => (
-        <div key={m.id} className={`bubble ${m.sender === currentUserId ? 'mine' : 'theirs'}`}>
-          <div className="text">{m.text}</div>
-          <div className="time">{formatTime(m.createdAt)}</div>
-        </div>
-      ))}
+      {messages.map((m) => {
+        const mine = m.sender === currentUserId;
+        return (
+          <div key={m.id} className={`bubble ${mine ? 'mine' : 'theirs'}`}>
+            {showSender && !mine && <div className="sender">{names[m.sender] || 'Unknown user'}</div>}
+            <div className="text">{m.text}</div>
+            <div className="time">{formatTime(m.createdAt)}</div>
+          </div>
+        );
+      })}
       <div ref={endRef} />
     </div>
   );

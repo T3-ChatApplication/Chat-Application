@@ -54,12 +54,15 @@ export default function Chat() {
     return () => socket.off('room:updated', loadRooms);
   }, [loadRooms]);
 
-  // Append new messages that belong to the open one-to-one conversation
+  // Append new messages that belong to the open conversation
   useEffect(() => {
     const socket = connectSocket();
     const onNew = (msg) => {
-      if (!active || active.type !== 'user') return;
-      const belongs = msg.sender === active.id || msg.receiver === active.id;
+      if (!active) return;
+      const belongs =
+        active.type === 'room'
+          ? msg.room === active.id
+          : !msg.room && (msg.sender === active.id || msg.receiver === active.id);
       if (!belongs) return;
       setMessages((prev) => (prev.some((m) => m.id === msg.id) ? prev : [...prev, msg]));
     };
@@ -67,14 +70,16 @@ export default function Chat() {
     return () => socket.off('message:new', onNew);
   }, [active]);
 
-  // Open a conversation. One-to-one chats load their stored history.
+  // Open a conversation (a user or a room) and load its stored history
   const openConversation = useCallback(async (conversation) => {
     setActive(conversation);
     setMessages([]);
     setError('');
-    if (conversation.type !== 'user') return;
     try {
-      const data = await api.history(conversation.id);
+      const data =
+        conversation.type === 'room'
+          ? await api.roomHistory(conversation.id)
+          : await api.history(conversation.id);
       setMessages(data.messages);
     } catch (e) {
       setError(e.message);
@@ -110,9 +115,16 @@ export default function Chat() {
     }
   }
 
+  // id -> username, so group messages can show who wrote them
+  const names = { [user.id]: user.username };
+  users.forEach((u) => {
+    names[u.id] = u.username;
+  });
+
   function sendMessage(text) {
     setError('');
-    connectSocket().emit('message:send', { to: active.id, text }, (res) => {
+    const payload = active.type === 'room' ? { room: active.id, text } : { to: active.id, text };
+    connectSocket().emit('message:send', payload, (res) => {
       if (!res?.ok) setError(res?.error || 'Could not send message');
     });
   }
@@ -153,14 +165,13 @@ export default function Chat() {
               {active.type === 'room' && <RoomInfo roomId={active.id} onLeave={leaveRoom} />}
             </header>
             {error && <div className="error">{error}</div>}
-            {active.type === 'user' ? (
-              <>
-                <MessageList messages={messages} currentUserId={user.id} />
-                <MessageInput onSend={sendMessage} disabled={!connected} />
-              </>
-            ) : (
-              <div className="messages empty muted">Group messages arrive in the next step.</div>
-            )}
+            <MessageList
+              messages={messages}
+              currentUserId={user.id}
+              names={names}
+              showSender={active.type === 'room'}
+            />
+            <MessageInput onSend={sendMessage} disabled={!connected} />
           </>
         ) : (
           <div className="center-screen muted">Select a user or a room to start chatting</div>

@@ -1,7 +1,7 @@
 import { Server } from 'socket.io';
 import User from '../models/User.js';
 import Room from '../models/Room.js';
-import Message, { buildConversationId } from '../models/Message.js';
+import Message, { buildConversationId, buildRoomConversationId } from '../models/Message.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
 
@@ -36,9 +36,27 @@ export function initSocket(httpServer) {
         const errors = validateMessage(payload);
         if (errors.length) return reply({ ok: false, error: errors[0] });
 
-        const { to } = payload;
+        const { to, room } = payload;
         const text = payload.text.trim();
 
+        // Group message: only members may post. Save first, then broadcast to the whole room.
+        if (room) {
+          const isMember = await Room.exists({ _id: room, members: socket.userId });
+          if (!isMember) return reply({ ok: false, error: 'You are not a member of this room' });
+
+          const saved = await Message.create({
+            conversationId: buildRoomConversationId(room),
+            sender: socket.userId,
+            room,
+            text,
+          });
+
+          const message = saved.toPublic();
+          io.to(`room:${room}`).emit('message:new', message);
+          return reply({ ok: true, message });
+        }
+
+        // One-to-one message
         const receiverExists = await User.exists({ _id: to });
         if (!receiverExists) return reply({ ok: false, error: 'Receiver not found' });
 
