@@ -435,3 +435,12 @@ button.small {
   justify-content: space-between;
   align-items: center;
 }
+
+/* ---- Typing indicator (Sprint 2) ---- */
+.typing {
+  min-height: 24px;
+  padding: 0 20px 4px;
+  font-size: 13px;
+  font-style: italic;
+  color: var(--muted);
+}

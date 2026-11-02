@@ -3,12 +3,14 @@ import { useAuth } from '../context/AuthContext.jsx';
 import { api } from '../api.js';
 import { connectSocket } from '../socket.js';
 import usePresence from '../hooks/usePresence.js';
+import useTyping from '../hooks/useTyping.js';
 import ConversationList from '../components/ConversationList.jsx';
 import RoomList from '../components/RoomList.jsx';
 import RoomInfo from '../components/RoomInfo.jsx';
 import MessageList from '../components/MessageList.jsx';
 import MessageInput from '../components/MessageInput.jsx';
 import ConnectionBanner from '../components/ConnectionBanner.jsx';
+import TypingIndicator from '../components/TypingIndicator.jsx';
 import { mergeMessages } from '../utils/messages.js';
 
 const fetchHistory = (conversation) =>
@@ -33,6 +35,7 @@ export default function Chat() {
   const [error, setError] = useState('');
   const [offlineNotice, setOfflineNotice] = useState('');
   const online = usePresence();
+  const typingIds = useTyping(active);
   const usersRef = useRef(users);
   usersRef.current = users;
   const activeRef = useRef(active);
@@ -227,6 +230,13 @@ export default function Chat() {
     names[u.id] = u.username;
   });
 
+  // Tell the other side we started / stopped typing. volatile: dropped if offline, never queued.
+  function sendTyping(isTyping) {
+    if (!active) return;
+    const payload = active.type === 'room' ? { room: active.id, isTyping } : { to: active.id, isTyping };
+    connectSocket().volatile.emit('typing', payload);
+  }
+
   function sendMessage(text) {
     setError('');
     const payload = active.type === 'room' ? { room: active.id, text } : { to: active.id, text };
@@ -303,7 +313,13 @@ export default function Chat() {
               names={names}
               showSender={active.type === 'room'}
             />
-            <MessageInput onSend={sendMessage} disabled={!connected} />
+            <TypingIndicator ids={typingIds.filter((id) => id !== user.id)} names={names} />
+            <MessageInput
+              key={`${active.type}:${active.id}`}
+              onSend={sendMessage}
+              disabled={!connected}
+              onTypingChange={sendTyping}
+            />
           </>
         ) : (
           <div className="center-screen muted">Select a user or a room to start chatting</div>

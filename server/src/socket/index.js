@@ -4,6 +4,7 @@ import Room from '../models/Room.js';
 import Message, { buildConversationId, buildRoomConversationId } from '../models/Message.js';
 import { registerPresence, presence } from './presence.js';
 import { deliverOfflineMessages } from './delivery.js';
+import { registerTyping } from './typing.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
 
@@ -34,6 +35,7 @@ export function initSocket(httpServer) {
     // Each user has a personal room, so a message reaches every open tab/device
     socket.join(`user:${socket.userId}`);
     registerPresence(io, socket);
+    registerTyping(io, socket);
 
     // Deliver any messages stored/queued while this user was offline upon login/reconnect
     await deliverOfflineMessages(io, socket);
