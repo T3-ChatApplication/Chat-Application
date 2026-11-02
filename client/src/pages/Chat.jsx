@@ -31,6 +31,7 @@ export default function Chat() {
   const [connection, setConnection] = useState('connecting');
   const connected = connection === 'connected';
   const [error, setError] = useState('');
+  const [offlineNotice, setOfflineNotice] = useState('');
   const online = usePresence();
   const usersRef = useRef(users);
   usersRef.current = users;
@@ -138,6 +139,46 @@ export default function Chat() {
     return () => socket.off('message:new', onNew);
   }, [active]);
 
+  // Handle messages queued while offline and delivery notifications
+  useEffect(() => {
+    const socket = connectSocket();
+
+    const onOffline = ({ messages: offlineList }) => {
+      if (!Array.isArray(offlineList) || offlineList.length === 0) return;
+      setOfflineNotice(
+        `Delivered ${offlineList.length} message${offlineList.length === 1 ? '' : 's'} received while offline.`
+      );
+
+      const current = activeRef.current;
+      if (current) {
+        const relevant = offlineList.filter((msg) =>
+          current.type === 'room'
+            ? msg.room === current.id
+            : !msg.room && (msg.sender === current.id || msg.receiver === current.id)
+        );
+        if (relevant.length > 0) {
+          setMessages((prev) => mergeMessages(prev, relevant));
+        }
+      }
+    };
+
+    const onDelivered = ({ messageIds }) => {
+      if (!Array.isArray(messageIds) || messageIds.length === 0) return;
+      const idsSet = new Set(messageIds);
+      setMessages((prev) =>
+        prev.map((m) => (idsSet.has(m.id) ? { ...m, delivered: true, status: 'delivered' } : m))
+      );
+    };
+
+    socket.on('message:offline', onOffline);
+    socket.on('message:delivered', onDelivered);
+
+    return () => {
+      socket.off('message:offline', onOffline);
+      socket.off('message:delivered', onDelivered);
+    };
+  }, []);
+
   // Open a conversation (a user or a room) and load its stored history
   const openConversation = useCallback(async (conversation) => {
     setActive(conversation);
@@ -232,6 +273,14 @@ export default function Chat() {
 
       <main className="chat-main">
         <ConnectionBanner status={connection} />
+        {offlineNotice && (
+          <div className="banner offline" role="status">
+            <span>{offlineNotice}</span>
+            <button className="link" onClick={() => setOfflineNotice('')} aria-label="Dismiss">
+              ✕
+            </button>
+          </div>
+        )}
         {active ? (
           <>
             <header className="chat-header">

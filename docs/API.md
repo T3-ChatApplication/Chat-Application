@@ -37,6 +37,26 @@ Returns every user except the caller: `{ "users": [ { "id", "username", "email" 
 
 ## Messages
 
+### GET /messages/offline (protected)
+Returns all stored messages queued for the caller while they were offline, oldest first.
+
+`200 OK`
+```json
+{
+  "messages": [
+    { "id": "...", "conversationId": "...", "sender": "...", "receiver": "...", "text": "Hi", "delivered": false, "status": "sent", "createdAt": "..." }
+  ]
+}
+```
+
+### POST /messages/offline/ack (protected)
+Acknowledges and marks offline messages as delivered.
+
+`200 OK`
+```json
+{ "ok": true, "deliveredCount": 1 }
+```
+
 ### GET /messages/:userId (protected)
 One-to-one history between the caller and `:userId`, oldest first.
 
@@ -65,6 +85,8 @@ Connections without a valid token are rejected with `Authentication failed`.
 |---|---|---|
 | `message:send` | client to server | `{ to: "<receiverUserId>", text: "Hello" }` plus an ack callback |
 | `message:new` | server to client | Saved message object (same shape as history items) |
+| `message:offline` | server to client | `{ messages: [ ... ] }` batch of messages queued while recipient was offline, delivered upon connection |
+| `message:delivered` | server to client | `{ to: "<recipientUserId>", messageIds: [ ... ] }` notifies sender when recipient connects and receives queued messages |
 
 Ack response: `{ ok: true, message }` or `{ ok: false, error: "Reason" }`.
 The server saves each message to MongoDB first, then emits `message:new` to both the sender and the receiver.

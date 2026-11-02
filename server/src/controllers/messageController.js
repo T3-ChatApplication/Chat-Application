@@ -14,6 +14,15 @@ async function loadHistory(conversationId, req) {
 
   // Newest N, then reversed so the client receives them in reading order
   const docs = await Message.find(query).sort({ createdAt: -1 }).limit(limit);
+
+  // When reading history, mark any messages sent to this user as delivered
+  if (req.userId) {
+    await Message.updateMany(
+      { conversationId, receiver: req.userId, delivered: false },
+      { $set: { delivered: true, status: 'delivered', deliveredAt: new Date() } }
+    ).catch(() => {});
+  }
+
   return docs.reverse().map((m) => m.toPublic());
 }
 
@@ -45,6 +54,35 @@ export async function getRoomHistory(req, res, next) {
 
     const messages = await loadHistory(buildRoomConversationId(roomId), req);
     return res.json({ messages });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+// GET /api/messages/offline
+// Returns all messages queued for the authenticated user while they were offline.
+export async function getOfflineMessages(req, res, next) {
+  try {
+    const docs = await Message.find({
+      receiver: req.userId,
+      delivered: false,
+    }).sort({ createdAt: 1 });
+    return res.json({ messages: docs.map((m) => m.toPublic()) });
+  } catch (err) {
+    return next(err);
+  }
+}
+
+// POST /api/messages/offline/ack
+// Explicitly marks all queued offline messages as delivered.
+export async function ackOfflineMessages(req, res, next) {
+  try {
+    const now = new Date();
+    const result = await Message.updateMany(
+      { receiver: req.userId, delivered: false },
+      { $set: { delivered: true, status: 'delivered', deliveredAt: now } }
+    );
+    return res.json({ ok: true, deliveredCount: result.modifiedCount || 0 });
   } catch (err) {
     return next(err);
   }

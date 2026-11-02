@@ -8,11 +8,19 @@ const messageSchema = new mongoose.Schema(
     receiver: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     room: { type: mongoose.Schema.Types.ObjectId, ref: 'Room' },
     text: { type: String, required: true, trim: true, maxlength: 2000 },
+    delivered: { type: Boolean, default: false },
+    status: {
+      type: String,
+      enum: ['sent', 'delivered', 'read'],
+      default: 'sent',
+    },
+    deliveredAt: { type: Date, default: null },
   },
   { timestamps: true }
 );
 
 messageSchema.index({ conversationId: 1, createdAt: 1 });
+messageSchema.index({ receiver: 1, delivered: 1, createdAt: 1 });
 
 messageSchema.pre('validate', function requireTarget(next) {
   if (!this.receiver && !this.room) {
@@ -39,7 +47,12 @@ messageSchema.methods.toPublic = function toPublic() {
     text: this.text,
     createdAt: this.createdAt,
   };
-  if (this.receiver) message.receiver = this.receiver.toString();
+  if (this.receiver) {
+    message.receiver = this.receiver.toString();
+    message.delivered = Boolean(this.delivered);
+    message.status = this.status || (this.delivered ? 'delivered' : 'sent');
+    if (this.deliveredAt) message.deliveredAt = this.deliveredAt;
+  }
   if (this.room) message.room = this.room.toString();
   return message;
 };

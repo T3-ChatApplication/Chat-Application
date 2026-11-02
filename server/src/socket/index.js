@@ -2,7 +2,8 @@ import { Server } from 'socket.io';
 import User from '../models/User.js';
 import Room from '../models/Room.js';
 import Message, { buildConversationId, buildRoomConversationId } from '../models/Message.js';
-import { registerPresence } from './presence.js';
+import { registerPresence, presence } from './presence.js';
+import { deliverOfflineMessages } from './offlineDelivery.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
 
@@ -33,6 +34,9 @@ export function initSocket(httpServer) {
     // Each user has a personal room, so a message reaches every open tab/device
     socket.join(`user:${socket.userId}`);
     registerPresence(io, socket);
+
+    // Deliver any messages stored/queued while this user was offline upon login/reconnect
+    await deliverOfflineMessages(io, socket);
 
     // Client emits: socket.emit('message:send', { to, text }, ack)
     socket.on('message:send', async (payload, ack) => {
@@ -65,17 +69,29 @@ export function initSocket(httpServer) {
         const receiverExists = await User.exists({ _id: to });
         if (!receiverExists) return reply({ ok: false, error: 'Receiver not found' });
 
-        // Save first, then deliver, so what users see is always what is stored
+        const isReceiverOnline = presence.isOnline(to);
+        const now = new Date();
+
+        // Save first, then deliver, so what users see is always what is stored.
+        // If receiver is offline, it is stored/queued for delivery on their next login.
         const saved = await Message.create({
           conversationId: buildConversationId(socket.userId, to),
           sender: socket.userId,
           receiver: to,
           text,
+          delivered: isReceiverOnline,
+          status: isReceiverOnline ? 'delivered' : 'sent',
+          deliveredAt: isReceiverOnline ? now : null,
         });
 
         const message = saved.toPublic();
-        // Deliver to both participants (sender gets it too, so all their tabs stay in sync)
-        io.to(`user:${to}`).to(`user:${socket.userId}`).emit('message:new', message);
+        if (isReceiverOnline) {
+          // Deliver to both participants (sender gets it too, so all their tabs stay in sync)
+          io.to(`user:${to}`).to(`user:${socket.userId}`).emit('message:new', message);
+        } else {
+          // Deliver to sender only; receiver gets it queued and delivered upon next login
+          io.to(`user:${socket.userId}`).emit('message:new', message);
+        }
         return reply({ ok: true, message });
       } catch (err) {
         console.error('message:send failed', err);
