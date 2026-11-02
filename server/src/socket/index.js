@@ -3,7 +3,7 @@ import User from '../models/User.js';
 import Room from '../models/Room.js';
 import Message, { buildConversationId, buildRoomConversationId } from '../models/Message.js';
 import { registerPresence, presence } from './presence.js';
-import { deliverOfflineMessages } from './offlineDelivery.js';
+import { deliverOfflineMessages } from './delivery.js';
 import { verifyToken } from '../utils/token.js';
 import { validateMessage } from '../utils/validators.js';
 

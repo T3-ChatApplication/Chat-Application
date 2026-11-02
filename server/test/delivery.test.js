@@ -4,7 +4,7 @@ import http from 'node:http';
 import { once } from 'node:events';
 import { createApp } from '../src/app.js';
 import Message from '../src/models/Message.js';
-import { deliverOfflineMessages } from '../src/socket/offlineDelivery.js';
+import { deliverOfflineMessages } from '../src/socket/delivery.js';
 import { signToken } from '../src/utils/token.js';
 
 process.env.JWT_SECRET = 'offline-test-secret';
