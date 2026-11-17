@@ -1,0 +1,38 @@
+# generated 2026-11-12T06:28:56.346Z | node v22.23.4 | Linux 6.18.44-fc-v378
+
+TC-019 password hashing
+  src/controllers/authController.js:20: const passwordHash = await bcrypt.hash(req.body.password, 10);
+  src/controllers/authController.js:21: const user = await User.create({ username, email, passwordHash });
+  src/controllers/authController.js:35: const user = await User.findOne({ email }).select('+passwordHash');
+  src/controllers/authController.js:38: const ok = user && (await bcrypt.compare(req.body.password, user.passwordHash));
+  src/models/User.js:21: passwordHash: { type: String, required: true, select: false },
+
+TC-028 horizontal scaling: shared adapter / broker in code or dependencies?
+  (none found in src/)
+  dependencies: bcryptjs, cors, dotenv, express, helmet, jsonwebtoken, mongoose, socket.io
+
+TC-028 process-local state (in-memory Map)
+  src/controllers/unreadController.js:24: lastRead: new Map(states.map((s) => [s.key, s.lastReadAt])),
+  src/utils/presence.js:4: const sockets = new Map(); // userId -> Set of socket ids
+  src/utils/rateLimiter.js:4: const windows = new Map(); // key -> { count, resetAt }
+
+TC-011 away presence state in server code?
+  (none found: only online/offline exist)
+
+TC-018 administration feature in server code?
+  (none found)
+
+TC-023 modular structure: folder -> files
+  src/config/ : db.js
+  src/controllers/ : authController.js, messageController.js, roomController.js, unreadController.js, userController.js
+  src/middleware/ : auth.js, errorHandler.js, rateLimit.js, sanitizeInput.js
+  src/models/ : Message.js, ReadState.js, Room.js, User.js
+  src/routes/ : auth.js, messages.js, rooms.js, unread.js, users.js
+  src/socket/ : delivery.js, index.js, presence.js, typing.js
+  src/utils/ : presence.js, rateLimiter.js, sanitize.js, status.js, token.js, unread.js, validators.js
+
+TC-023 layering check: which folders each folder imports from
+  controllers -> models, utils
+  middleware -> utils
+  routes -> controllers, middleware
+  socket -> models, utils
