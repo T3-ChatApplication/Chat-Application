@@ -2,7 +2,8 @@ import { Server } from 'socket.io';
 import User from '../models/User.js';
 import Room from '../models/Room.js';
 import Message, { buildConversationId, buildRoomConversationId } from '../models/Message.js';
-import { presence, registerPresence } from './presence.js';
+import { isUserOnline, registerPresence } from './presence.js';
+import { isClusterMode } from './cluster.js';
 import { flushPending, registerDelivery } from './delivery.js';
 import { registerTyping } from './typing.js';
 import { verifyToken } from '../utils/token.js';
@@ -25,13 +26,17 @@ export function initSocket(httpServer) {
     maxHttpBufferSize: 16 * 1024,
     // A client that drops for up to 2 minutes (Wi-Fi blip, laptop sleep) reconnects with the same
     // session and is sent the events it missed. Longer gaps are handled by the client reloading history.
-    connectionStateRecovery: { maxDisconnectionDuration: 2 * 60 * 1000 },
+    // Cluster mode: off at first. On reconnect the server re-checks room membership from MongoDB, so a
+    // room the user left while away is never restored from a cached session. The client still reconnects
+    // by itself and reloads history.
+    connectionStateRecovery: isClusterMode() ? undefined : { maxDisconnectionDuration: 2 * 60 * 1000 },
   });
 
   // Only authenticated users may open a socket (token sent in the handshake)
   io.use((socket, next) => {
     try {
       socket.userId = verifyToken(socket.handshake.auth?.token);
+      socket.data.userId = socket.userId; // visible to other instances (fetchSockets)
       next();
     } catch {
       next(new Error('Authentication failed'));
@@ -90,7 +95,7 @@ export function initSocket(httpServer) {
           receiver: to,
           text,
           // Receiver online: delivered right now. Offline: stays 'sent' until they connect (delivery.js)
-          status: presence.isOnline(to) ? 'delivered' : 'sent',
+          status: (await isUserOnline(io, to)) ? 'delivered' : 'sent',
         });
 
         const message = saved.toPublic();
