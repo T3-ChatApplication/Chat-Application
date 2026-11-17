@@ -1,0 +1,131 @@
+# generated 2026-11-12T06:29:11Z | node v22.23.4 | Linux 6.18.44-fc-v378
+$ node --test    (what "npm test" runs; npm packages are NOT installable in this sandbox)
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'jsonwebtoken' imported from /tmp/claude-0/-home-claude/a600f4a3-0251-5a50-a94d-9a951656ec76/scratchpad/repo/upstream/server/src/utils/token.js
+}
+Node.js v22.23.4
+✖ test/auth.test.js (33.505517ms)
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'mongoose' imported from /tmp/claude-0/-home-claude/a600f4a3-0251-5a50-a94d-9a951656ec76/scratchpad/repo/upstream/server/src/models/Message.js
+}
+Node.js v22.23.4
+✖ test/conversation.test.js (31.352572ms)
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'bcryptjs' imported from /tmp/claude-0/-home-claude/a600f4a3-0251-5a50-a94d-9a951656ec76/scratchpad/repo/upstream/server/test/login.test.js
+}
+Node.js v22.23.4
+✖ test/login.test.js (65.698486ms)
+✔ first socket brings a user online, later sockets do not (0.624593ms)
+✔ user goes offline only when the last socket disconnects (0.168128ms)
+✔ removing an unknown socket or user changes nothing (0.091318ms)
+✔ onlineIds and count list each online user once (1.49594ms)
+✔ a user can come online again after going offline (0.192634ms)
+✔ ids are compared as strings (0.1187ms)
+✔ allows hits up to the limit, then blocks (0.692192ms)
+✔ keys are counted separately (0.104473ms)
+✔ a new window starts after windowMs (0.129143ms)
+✔ retryAfterMs counts down inside a window (0.130479ms)
+✔ prune removes only finished windows (0.290727ms)
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'express' imported from /tmp/claude-0/-home-claude/a600f4a3-0251-5a50-a94d-9a951656ec76/scratchpad/repo/upstream/server/test/sanitize.test.js
+}
+Node.js v22.23.4
+✖ test/sanitize.test.js (47.19396ms)
+(node:1538) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+(Use `node --trace-warnings ...` to show where the warning was created)
+✔ TC-021: sanitizeInput strips $operators from body and query, then calls next (1.42748ms)
+✔ TC-021: sanitizeInput tolerates a missing body / query (0.182961ms)
+✔ rateLimit: allows up to the limit, then answers 429 with Retry-After (0.426566ms)
+✔ rateLimit: limits are counted per IP address (0.223887ms)
+✔ rateLimit: default message is used when none is given (0.379383ms)
+✔ notFound: 404 JSON naming the method and URL (0.194822ms)
+✔ errorHandler: uses err.status and message, defaults to 500 (0.417004ms)
+✔ rateLimit: expired windows are pruned by the background timer, so counts start fresh (0.743304ms)
+✔ TC-017: nothing to count gives null (no database query needed) (0.951892ms)
+✔ TC-017: a chat never opened counts every message from that sender (0.955627ms)
+✔ TC-017: an opened chat only counts messages after the last-read time (count returns to 0) (0.20159ms)
+✔ TC-017: room branch excludes my own messages and uses the room last-read time (1.063047ms)
+✔ TC-034: private chats and rooms are combined into ONE filter (one query, not one per chat) (0.180753ms)
+✔ TC-017: toCounts keys match the client (user:<id> / room:<id>) and skip zero rows (0.28644ms)
+✔ TC-002: 7-character password is rejected (0.929566ms)
+✔ TC-002: 8-character password is accepted (0.670242ms)
+✔ TC-002: 72-byte password is accepted, 73-byte is rejected (bcrypt limit) (0.108822ms)
+✔ TC-002: multi-byte password is measured in UTF-8 bytes, not characters (0.080721ms)
+✔ TC-002: non-string password is rejected (0.087407ms)
+✔ TC-001: valid registration payload has no errors (0.12492ms)
+✔ TC-001: username length 2 / 3 / 30 / 31 boundaries (0.131494ms)
+✔ TC-001: username with illegal characters is rejected (0.07596ms)
+✔ TC-001: malformed or over-long email is rejected (0.232712ms)
+✔ TC-001: missing / null / non-object body gives errors instead of throwing (0.225668ms)
+✔ TC-003: login needs a valid email and a non-empty password (0.200266ms)
+✔ TC-009: room names: allowed, too short, too long, illegal characters (0.286487ms)
+✔ TC-021: XSS payload is kept as literal text (client renders text, never HTML) (0.051726ms)
+✔ TC-021: XSS payload in a room name is rejected (1.06485ms)
+✔ TC-021: SQL-style payload ' OR '1'='1 in username is rejected, in login is only data (0.107275ms)
+✔ TC-021: NoSQL operator objects are stripped from request data (0.262333ms)
+✔ TC-021: prototype-pollution keys are removed (0.087645ms)
+✔ TC-021: operators inside arrays and nested objects are stripped; primitives untouched (0.074101ms)
+✔ TC-021: very deep objects and arrays are cut off instead of recursing forever (0.16757ms)
+✔ TC-021: sanitizeLine collapses whitespace to one line; sanitizeText ignores non-strings (0.121035ms)
+✔ TC-005: message must target exactly one of user or room, with a valid id (0.157578ms)
+✔ TC-016: message length boundary is 2000 characters (0.089157ms)
+✔ TC-016/TC-017: id and conversation-key helpers (0.092878ms)
+✔ TC-032: control characters are removed, tab and newline are kept (0.077339ms)
+✔ TC-032: zero-width and bidirectional override characters are removed (0.046299ms)
+✔ TC-032: three or more line breaks collapse to one blank line; CRLF becomes LF (0.034977ms)
+✔ TC-032: emoji with joiners survive, joiners alone are treated as empty (0.036663ms)
+✔ status order is sent, delivered, read (0.907332ms)
+✔ a status can only move forward (0.19391ms)
+✔ unknown statuses never advance (0.193006ms)
+✔ groupIdsBySender collects message ids per sender as strings (0.597082ms)
+✔ one-to-one typing is sent to the other user only (2.597439ms)
+✔ stopped typing is passed on too (0.206095ms)
+✔ room typing reaches the room and names the room (0.123413ms)
+✔ typing into a room you have not joined is ignored (0.088179ms)
+✔ malformed payloads are ignored (0.1898ms)
+✔ the sender id comes from the socket, not from the payload (0.095307ms)
+✔ a flood of typing events is cut off (0.252025ms)
+  throw new ERR_MODULE_NOT_FOUND(packageName, fileURLToPath(base), null);
+        ^
+Error [ERR_MODULE_NOT_FOUND]: Cannot find package 'mongoose' imported from /tmp/claude-0/-home-claude/a600f4a3-0251-5a50-a94d-9a951656ec76/scratchpad/repo/upstream/server/test/unread.test.js
+}
+Node.js v22.23.4
+✖ test/unread.test.js (37.397182ms)
+✔ register: accepts valid input (2.298624ms)
+✔ register: rejects short username, bad email and short password (0.238971ms)
+✔ register: rejects username with special characters (0.146942ms)
+✔ register: handles missing body (0.126807ms)
+✔ login: requires email and password (0.150627ms)
+✔ room: accepts normal names and rejects bad ones (0.323847ms)
+✔ isObjectId: only accepts 24-character hex strings (0.293709ms)
+✔ isConversationKey: user:<id> or room:<id> only (0.167512ms)
+✔ message: goes to a user or a room, not both and not neither (0.313772ms)
+✔ message: validates receiver id and text (0.344576ms)
+ℹ tests 78
+ℹ suites 0
+ℹ pass 73
+ℹ fail 5
+ℹ cancelled 0
+ℹ skipped 0
+ℹ todo 0
+ℹ duration_ms 624.117922
+✖ failing tests:
+test at test/auth.test.js:1:1
+✖ test/auth.test.js (33.505517ms)
+  'test failed'
+test at test/conversation.test.js:1:1
+✖ test/conversation.test.js (31.352572ms)
+  'test failed'
+test at test/login.test.js:1:1
+✖ test/login.test.js (65.698486ms)
+  'test failed'
+test at test/sanitize.test.js:1:1
+✖ test/sanitize.test.js (47.19396ms)
+  'test failed'
+test at test/unread.test.js:1:1
+✖ test/unread.test.js (37.397182ms)
+  'test failed'

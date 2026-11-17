@@ -1,0 +1,474 @@
+# generated 2026-11-12T06:28:56.346Z | node v22.23.4 | Linux 6.18.44-fc-v378
+$ node --test --experimental-test-coverage test/presence.test.js test/rateLimiter.test.js test/sprint3.middleware.test.js test/sprint3.unread.test.js test/sprint3.validation.test.js test/status.test.js test/typing.test.js test/validators.test.js
+TAP version 13
+# Subtest: first socket brings a user online, later sockets do not
+ok 1 - first socket brings a user online, later sockets do not
+  ---
+  duration_ms: 1.737533
+  type: 'test'
+  ...
+# Subtest: user goes offline only when the last socket disconnects
+ok 2 - user goes offline only when the last socket disconnects
+  ---
+  duration_ms: 0.156375
+  type: 'test'
+  ...
+# Subtest: removing an unknown socket or user changes nothing
+ok 3 - removing an unknown socket or user changes nothing
+  ---
+  duration_ms: 0.092976
+  type: 'test'
+  ...
+# Subtest: onlineIds and count list each online user once
+ok 4 - onlineIds and count list each online user once
+  ---
+  duration_ms: 1.51416
+  type: 'test'
+  ...
+# Subtest: a user can come online again after going offline
+ok 5 - a user can come online again after going offline
+  ---
+  duration_ms: 0.151118
+  type: 'test'
+  ...
+# Subtest: ids are compared as strings
+ok 6 - ids are compared as strings
+  ---
+  duration_ms: 0.081499
+  type: 'test'
+  ...
+# Subtest: allows hits up to the limit, then blocks
+ok 7 - allows hits up to the limit, then blocks
+  ---
+  duration_ms: 1.932812
+  type: 'test'
+  ...
+# Subtest: keys are counted separately
+ok 8 - keys are counted separately
+  ---
+  duration_ms: 0.132029
+  type: 'test'
+  ...
+# Subtest: a new window starts after windowMs
+ok 9 - a new window starts after windowMs
+  ---
+  duration_ms: 0.106074
+  type: 'test'
+  ...
+# Subtest: retryAfterMs counts down inside a window
+ok 10 - retryAfterMs counts down inside a window
+  ---
+  duration_ms: 0.082139
+  type: 'test'
+  ...
+# Subtest: prune removes only finished windows
+ok 11 - prune removes only finished windows
+  ---
+  duration_ms: 0.178444
+  type: 'test'
+  ...
+# (node:1370) ExperimentalWarning: The MockTimers API is an experimental feature and might change at any time
+# (Use `node --trace-warnings ...` to show where the warning was created)
+# Subtest: TC-021: sanitizeInput strips $operators from body and query, then calls next
+ok 12 - TC-021: sanitizeInput strips $operators from body and query, then calls next
+  ---
+  duration_ms: 2.027959
+  type: 'test'
+  ...
+# Subtest: TC-021: sanitizeInput tolerates a missing body / query
+ok 13 - TC-021: sanitizeInput tolerates a missing body / query
+  ---
+  duration_ms: 0.25254
+  type: 'test'
+  ...
+# Subtest: rateLimit: allows up to the limit, then answers 429 with Retry-After
+ok 14 - rateLimit: allows up to the limit, then answers 429 with Retry-After
+  ---
+  duration_ms: 0.564656
+  type: 'test'
+  ...
+# Subtest: rateLimit: limits are counted per IP address
+ok 15 - rateLimit: limits are counted per IP address
+  ---
+  duration_ms: 0.193884
+  type: 'test'
+  ...
+# Subtest: rateLimit: default message is used when none is given
+ok 16 - rateLimit: default message is used when none is given
+  ---
+  duration_ms: 0.164045
+  type: 'test'
+  ...
+# Subtest: notFound: 404 JSON naming the method and URL
+ok 17 - notFound: 404 JSON naming the method and URL
+  ---
+  duration_ms: 0.160906
+  type: 'test'
+  ...
+# Subtest: errorHandler: uses err.status and message, defaults to 500
+ok 18 - errorHandler: uses err.status and message, defaults to 500
+  ---
+  duration_ms: 0.667821
+  type: 'test'
+  ...
+# Subtest: rateLimit: expired windows are pruned by the background timer, so counts start fresh
+ok 19 - rateLimit: expired windows are pruned by the background timer, so counts start fresh
+  ---
+  duration_ms: 2.73681
+  type: 'test'
+  ...
+# Subtest: TC-017: nothing to count gives null (no database query needed)
+ok 20 - TC-017: nothing to count gives null (no database query needed)
+  ---
+  duration_ms: 1.853806
+  type: 'test'
+  ...
+# Subtest: TC-017: a chat never opened counts every message from that sender
+ok 21 - TC-017: a chat never opened counts every message from that sender
+  ---
+  duration_ms: 0.914409
+  type: 'test'
+  ...
+# Subtest: TC-017: an opened chat only counts messages after the last-read time (count returns to 0)
+ok 22 - TC-017: an opened chat only counts messages after the last-read time (count returns to 0)
+  ---
+  duration_ms: 0.15806
+  type: 'test'
+  ...
+# Subtest: TC-017: room branch excludes my own messages and uses the room last-read time
+ok 23 - TC-017: room branch excludes my own messages and uses the room last-read time
+  ---
+  duration_ms: 0.265279
+  type: 'test'
+  ...
+# Subtest: TC-034: private chats and rooms are combined into ONE filter (one query, not one per chat)
+ok 24 - TC-034: private chats and rooms are combined into ONE filter (one query, not one per chat)
+  ---
+  duration_ms: 0.106316
+  type: 'test'
+  ...
+# Subtest: TC-017: toCounts keys match the client (user:<id> / room:<id>) and skip zero rows
+ok 25 - TC-017: toCounts keys match the client (user:<id> / room:<id>) and skip zero rows
+  ---
+  duration_ms: 0.211596
+  type: 'test'
+  ...
+# Subtest: TC-002: 7-character password is rejected
+ok 26 - TC-002: 7-character password is rejected
+  ---
+  duration_ms: 1.036349
+  type: 'test'
+  ...
+# Subtest: TC-002: 8-character password is accepted
+ok 27 - TC-002: 8-character password is accepted
+  ---
+  duration_ms: 0.741404
+  type: 'test'
+  ...
+# Subtest: TC-002: 72-byte password is accepted, 73-byte is rejected (bcrypt limit)
+ok 28 - TC-002: 72-byte password is accepted, 73-byte is rejected (bcrypt limit)
+  ---
+  duration_ms: 0.130144
+  type: 'test'
+  ...
+# Subtest: TC-002: multi-byte password is measured in UTF-8 bytes, not characters
+ok 29 - TC-002: multi-byte password is measured in UTF-8 bytes, not characters
+  ---
+  duration_ms: 0.107306
+  type: 'test'
+  ...
+# Subtest: TC-002: non-string password is rejected
+ok 30 - TC-002: non-string password is rejected
+  ---
+  duration_ms: 0.076534
+  type: 'test'
+  ...
+# Subtest: TC-001: valid registration payload has no errors
+ok 31 - TC-001: valid registration payload has no errors
+  ---
+  duration_ms: 0.06631
+  type: 'test'
+  ...
+# Subtest: TC-001: username length 2 / 3 / 30 / 31 boundaries
+ok 32 - TC-001: username length 2 / 3 / 30 / 31 boundaries
+  ---
+  duration_ms: 0.097668
+  type: 'test'
+  ...
+# Subtest: TC-001: username with illegal characters is rejected
+ok 33 - TC-001: username with illegal characters is rejected
+  ---
+  duration_ms: 0.081732
+  type: 'test'
+  ...
+# Subtest: TC-001: malformed or over-long email is rejected
+ok 34 - TC-001: malformed or over-long email is rejected
+  ---
+  duration_ms: 0.115415
+  type: 'test'
+  ...
+# Subtest: TC-001: missing / null / non-object body gives errors instead of throwing
+ok 35 - TC-001: missing / null / non-object body gives errors instead of throwing
+  ---
+  duration_ms: 0.182945
+  type: 'test'
+  ...
+# Subtest: TC-003: login needs a valid email and a non-empty password
+ok 36 - TC-003: login needs a valid email and a non-empty password
+  ---
+  duration_ms: 0.172057
+  type: 'test'
+  ...
+# Subtest: TC-009: room names: allowed, too short, too long, illegal characters
+ok 37 - TC-009: room names: allowed, too short, too long, illegal characters
+  ---
+  duration_ms: 0.394738
+  type: 'test'
+  ...
+# Subtest: TC-021: XSS payload is kept as literal text (client renders text, never HTML)
+ok 38 - TC-021: XSS payload is kept as literal text (client renders text, never HTML)
+  ---
+  duration_ms: 0.072705
+  type: 'test'
+  ...
+# Subtest: TC-021: XSS payload in a room name is rejected
+ok 39 - TC-021: XSS payload in a room name is rejected
+  ---
+  duration_ms: 0.065464
+  type: 'test'
+  ...
+# Subtest: TC-021: SQL-style payload ' OR '1'='1 in username is rejected, in login is only data
+ok 40 - TC-021: SQL-style payload ' OR '1'='1 in username is rejected, in login is only data
+  ---
+  duration_ms: 0.075764
+  type: 'test'
+  ...
+# Subtest: TC-021: NoSQL operator objects are stripped from request data
+ok 41 - TC-021: NoSQL operator objects are stripped from request data
+  ---
+  duration_ms: 0.312066
+  type: 'test'
+  ...
+# Subtest: TC-021: prototype-pollution keys are removed
+ok 42 - TC-021: prototype-pollution keys are removed
+  ---
+  duration_ms: 0.145349
+  type: 'test'
+  ...
+# Subtest: TC-021: operators inside arrays and nested objects are stripped; primitives untouched
+ok 43 - TC-021: operators inside arrays and nested objects are stripped; primitives untouched
+  ---
+  duration_ms: 0.115367
+  type: 'test'
+  ...
+# Subtest: TC-021: very deep objects and arrays are cut off instead of recursing forever
+ok 44 - TC-021: very deep objects and arrays are cut off instead of recursing forever
+  ---
+  duration_ms: 0.183317
+  type: 'test'
+  ...
+# Subtest: TC-021: sanitizeLine collapses whitespace to one line; sanitizeText ignores non-strings
+ok 45 - TC-021: sanitizeLine collapses whitespace to one line; sanitizeText ignores non-strings
+  ---
+  duration_ms: 0.174158
+  type: 'test'
+  ...
+# Subtest: TC-005: message must target exactly one of user or room, with a valid id
+ok 46 - TC-005: message must target exactly one of user or room, with a valid id
+  ---
+  duration_ms: 0.239583
+  type: 'test'
+  ...
+# Subtest: TC-016: message length boundary is 2000 characters
+ok 47 - TC-016: message length boundary is 2000 characters
+  ---
+  duration_ms: 0.121908
+  type: 'test'
+  ...
+# Subtest: TC-016/TC-017: id and conversation-key helpers
+ok 48 - TC-016/TC-017: id and conversation-key helpers
+  ---
+  duration_ms: 0.174614
+  type: 'test'
+  ...
+# Subtest: TC-032: control characters are removed, tab and newline are kept
+ok 49 - TC-032: control characters are removed, tab and newline are kept
+  ---
+  duration_ms: 0.067265
+  type: 'test'
+  ...
+# Subtest: TC-032: zero-width and bidirectional override characters are removed
+ok 50 - TC-032: zero-width and bidirectional override characters are removed
+  ---
+  duration_ms: 0.064735
+  type: 'test'
+  ...
+# Subtest: TC-032: three or more line breaks collapse to one blank line; CRLF becomes LF
+ok 51 - TC-032: three or more line breaks collapse to one blank line; CRLF becomes LF
+  ---
+  duration_ms: 0.058531
+  type: 'test'
+  ...
+# Subtest: TC-032: emoji with joiners survive, joiners alone are treated as empty
+ok 52 - TC-032: emoji with joiners survive, joiners alone are treated as empty
+  ---
+  duration_ms: 0.065574
+  type: 'test'
+  ...
+# Subtest: status order is sent, delivered, read
+ok 53 - status order is sent, delivered, read
+  ---
+  duration_ms: 1.589855
+  type: 'test'
+  ...
+# Subtest: a status can only move forward
+ok 54 - a status can only move forward
+  ---
+  duration_ms: 0.137542
+  type: 'test'
+  ...
+# Subtest: unknown statuses never advance
+ok 55 - unknown statuses never advance
+  ---
+  duration_ms: 0.081146
+  type: 'test'
+  ...
+# Subtest: groupIdsBySender collects message ids per sender as strings
+ok 56 - groupIdsBySender collects message ids per sender as strings
+  ---
+  duration_ms: 0.789981
+  type: 'test'
+  ...
+# Subtest: one-to-one typing is sent to the other user only
+ok 57 - one-to-one typing is sent to the other user only
+  ---
+  duration_ms: 2.03422
+  type: 'test'
+  ...
+# Subtest: stopped typing is passed on too
+ok 58 - stopped typing is passed on too
+  ---
+  duration_ms: 0.269303
+  type: 'test'
+  ...
+# Subtest: room typing reaches the room and names the room
+ok 59 - room typing reaches the room and names the room
+  ---
+  duration_ms: 0.218616
+  type: 'test'
+  ...
+# Subtest: typing into a room you have not joined is ignored
+ok 60 - typing into a room you have not joined is ignored
+  ---
+  duration_ms: 0.14442
+  type: 'test'
+  ...
+# Subtest: malformed payloads are ignored
+ok 61 - malformed payloads are ignored
+  ---
+  duration_ms: 0.153365
+  type: 'test'
+  ...
+# Subtest: the sender id comes from the socket, not from the payload
+ok 62 - the sender id comes from the socket, not from the payload
+  ---
+  duration_ms: 0.097908
+  type: 'test'
+  ...
+# Subtest: a flood of typing events is cut off
+ok 63 - a flood of typing events is cut off
+  ---
+  duration_ms: 0.216328
+  type: 'test'
+  ...
+# Subtest: register: accepts valid input
+ok 64 - register: accepts valid input
+  ---
+  duration_ms: 2.199982
+  type: 'test'
+  ...
+# Subtest: register: rejects short username, bad email and short password
+ok 65 - register: rejects short username, bad email and short password
+  ---
+  duration_ms: 0.251548
+  type: 'test'
+  ...
+# Subtest: register: rejects username with special characters
+ok 66 - register: rejects username with special characters
+  ---
+  duration_ms: 0.151958
+  type: 'test'
+  ...
+# Subtest: register: handles missing body
+ok 67 - register: handles missing body
+  ---
+  duration_ms: 0.269073
+  type: 'test'
+  ...
+# Subtest: login: requires email and password
+ok 68 - login: requires email and password
+  ---
+  duration_ms: 0.284372
+  type: 'test'
+  ...
+# Subtest: room: accepts normal names and rejects bad ones
+ok 69 - room: accepts normal names and rejects bad ones
+  ---
+  duration_ms: 0.502339
+  type: 'test'
+  ...
+# Subtest: isObjectId: only accepts 24-character hex strings
+ok 70 - isObjectId: only accepts 24-character hex strings
+  ---
+  duration_ms: 0.279049
+  type: 'test'
+  ...
+# Subtest: isConversationKey: user:<id> or room:<id> only
+ok 71 - isConversationKey: user:<id> or room:<id> only
+  ---
+  duration_ms: 0.229799
+  type: 'test'
+  ...
+# Subtest: message: goes to a user or a room, not both and not neither
+ok 72 - message: goes to a user or a room, not both and not neither
+  ---
+  duration_ms: 0.270898
+  type: 'test'
+  ...
+# Subtest: message: validates receiver id and text
+ok 73 - message: validates receiver id and text
+  ---
+  duration_ms: 0.291992
+  type: 'test'
+  ...
+1..73
+# tests 73
+# suites 0
+# pass 73
+# fail 0
+# cancelled 0
+# skipped 0
+# todo 0
+# duration_ms 568.676358
+# start of coverage report
+# -------------------------------------------------------------------
+# file               | line % | branch % | funcs % | uncovered lines
+# -------------------------------------------------------------------
+# src                |        |          |         | 
+#  middleware        |        |          |         | 
+#   errorHandler.js  | 100.00 |   100.00 |  100.00 | 
+#   rateLimit.js     | 100.00 |   100.00 |  100.00 | 
+#   sanitizeInput.js | 100.00 |   100.00 |  100.00 | 
+#  socket            |        |          |         | 
+#   typing.js        | 100.00 |   100.00 |  100.00 | 
+#  utils             |        |          |         | 
+#   presence.js      | 100.00 |   100.00 |  100.00 | 
+#   rateLimiter.js   | 100.00 |   100.00 |  100.00 | 
+#   sanitize.js      | 100.00 |   100.00 |  100.00 | 
+#   status.js        | 100.00 |   100.00 |  100.00 | 
+#   unread.js        | 100.00 |   100.00 |  100.00 | 
+#   validators.js    | 100.00 |   100.00 |  100.00 | 
+# -------------------------------------------------------------------
+# all files          | 100.00 |   100.00 |  100.00 | 
+# -------------------------------------------------------------------
+# end of coverage report
